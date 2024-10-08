@@ -1,9 +1,9 @@
 import sys
 import numpy as np
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QPushButton, QWidget, QLabel, QLineEdit
 )
-from PyQt5.QtCore import Qt
+from PyQt6.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
@@ -16,10 +16,40 @@ class MplCanvas(FigureCanvas):
         super(MplCanvas, self).__init__(fig)
 
 
+# Dark mode stylesheet for PyQt widgets
+dark_mode_style = """
+    QWidget {
+        background-color: #2e2e2e;
+        color: #ffffff;
+    }
+
+    QLineEdit {
+        background-color: #3e3e3e;
+        border: 1px solid #555555;
+        padding: 4px;
+        color: #ffffff;
+    }
+
+    QPushButton {
+        background-color: #4e4e4e;
+        border: 1px solid #555555;
+        padding: 6px;
+        color: #ffffff;
+    }
+
+    QPushButton:hover {
+        background-color: #5e5e5e;
+    }
+
+    QLabel {
+        color: #ffffff;
+    }
+"""
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Path Input and Switching Views")
+        self.setWindowTitle("Path Input and Dark Mode Plot")
 
         # Call the method to load the initial input view
         self.load_path_input_view()
@@ -53,7 +83,7 @@ class MainWindow(QMainWindow):
         path1 = self.path_input_1.text()
         path2 = self.path_input_2.text()
 
-        # Create a pie chart in the second view
+        # Create a pie chart in the second view with dark mode for the plot
         self.canvas = MplCanvas(self, width=5, height=4, dpi=100)
 
         # Sample data for pie chart
@@ -62,10 +92,23 @@ class MainWindow(QMainWindow):
         colors = ['#ff9999', '#66b3ff', '#99ff99', '#ffcc99']
         explode = (0.1, 0, 0, 0)  # 'explode' the 1st slice
 
-        # Plot pie chart
-        self.canvas.axes.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.1f%%',
-                             shadow=True, startangle=90)
-        self.canvas.axes.axis('equal')  # Equal aspect ratio to ensure pie is drawn as a circle.
+        # Apply dark mode to the plot
+        self.canvas.axes.set_facecolor('#2e2e2e')  # Set background of plot to dark
+        self.canvas.figure.patch.set_facecolor('#2e2e2e')  # Set figure background
+
+        # Plot pie chart with dark mode settings
+        wedges, texts, autotexts = self.canvas.axes.pie(
+            sizes, explode=explode, labels=labels, colors=colors, autopct='%1.1f%%',
+            shadow=True, startangle=90
+        )
+
+        # Set the text color of the pie chart labels to white
+        for text in texts:
+            text.set_color('white')
+        for autotext in autotexts:
+            autotext.set_color('white')
+
+        self.canvas.axes.axis('equal')  # Equal aspect ratio ensures pie is drawn as a circle.
 
         # Create a button to return to the input view
         return_button = QPushButton("Return to Path Input")
@@ -85,6 +128,10 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+
+    # Apply dark mode stylesheet to the whole application
+    app.setStyleSheet(dark_mode_style)
+
     main = MainWindow()
     main.show()
     sys.exit(app.exec())
