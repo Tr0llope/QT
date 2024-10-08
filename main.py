@@ -1,8 +1,20 @@
 import sys
-from PyQt6.QtWidgets import (
+import numpy as np
+from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QPushButton, QWidget, QLabel, QLineEdit
 )
-from PyQt6.QtCore import Qt
+from PyQt5.QtCore import Qt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+
+
+# Custom canvas class to integrate Matplotlib with PyQt
+class MplCanvas(FigureCanvas):
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = fig.add_subplot(111)
+        super(MplCanvas, self).__init__(fig)
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -41,8 +53,19 @@ class MainWindow(QMainWindow):
         path1 = self.path_input_1.text()
         path2 = self.path_input_2.text()
 
-        # Create a new layout to show the paths entered
-        label = QLabel(f"Paths Entered:\nPath 1: {path1}\nPath 2: {path2}")
+        # Create a pie chart in the second view
+        self.canvas = MplCanvas(self, width=5, height=4, dpi=100)
+
+        # Sample data for pie chart
+        labels = ['A', 'B', 'C', 'D']
+        sizes = [15, 30, 45, 10]  # Example data for the pie chart
+        colors = ['#ff9999', '#66b3ff', '#99ff99', '#ffcc99']
+        explode = (0.1, 0, 0, 0)  # 'explode' the 1st slice
+
+        # Plot pie chart
+        self.canvas.axes.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.1f%%',
+                             shadow=True, startangle=90)
+        self.canvas.axes.axis('equal')  # Equal aspect ratio to ensure pie is drawn as a circle.
 
         # Create a button to return to the input view
         return_button = QPushButton("Return to Path Input")
@@ -50,13 +73,15 @@ class MainWindow(QMainWindow):
 
         # Create layout for the second view
         layout = QVBoxLayout()
-        layout.addWidget(label)
+        layout.addWidget(QLabel(f"Paths Entered:\nPath 1: {path1}\nPath 2: {path2}"))
+        layout.addWidget(self.canvas)
         layout.addWidget(return_button)
 
         # Set the central widget for this view
         new_widget = QWidget()
         new_widget.setLayout(layout)
         self.setCentralWidget(new_widget)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
